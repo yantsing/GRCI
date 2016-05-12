@@ -1,22 +1,38 @@
 % Give the channels H, noise variance \sigma^2, and regularization
 % parameter \alpha, calculate the rates. 
-function result = beamforming4_4(H, sigma2)
+function result = beamforming4_4bak(H, sigma2, ATilde,Lambda,a,alpha)
 K = size(H,1);
 N = size(H,2);
 
-t_max = 30;
-t_min = 0;
-threshold = 0.001
-result = zeros(N,K);
+gain = real(trace(H'*H));
+t_max = sqrt((gain/K)/sigma2);
+% t_max = 100;
+
+threshold = 0.001;
+
+invX = Lambda + alpha*eye(K);
+X = inv(invX);
+x = diag(X);
+for k = 1 : K
+    gamma(k) = (real(a(:,k,k))'* x)^2 / (x'*(ATilde(:,:,k) + sigma2 * Lambda) *x);  
+    xi(k) = 1/x(k) - Lambda(k,k);
+end
+
+t_min = sqrt(min(gamma));
+
+W = H' * inv(H*H' + alpha*eye(K));
+W = W/sqrt(real(trace(W'*W)));
+
+result = W;
+
 for k = 1 : K
     Hk(:,:,k) = H(k,:)'*H(k,:);
 end
 
-
 while t_max - t_min > threshold
 
-t = (t_max + t_min)/2;
-cvx_begin
+t = real(t_max + t_min)/2;
+cvx_begin quiet
 cvx_precision best
 variable  W1(N,N) complex semidefinite
 variable  W2(N,N) complex semidefinite
@@ -25,7 +41,7 @@ variable  W4(N,N) complex semidefinite
 
 
 
-minimize(trace(W1) + trace(W2) + trace(W3) + trace(W4))
+maximize(trace(W1) + trace(W2) + trace(W3) + trace(W4))
 
 subject to
 
@@ -47,6 +63,7 @@ else
     rW4 = W4;
 end
 end
+
 [w1,d1]= svd(rW1);
 [w2,d2]= svd(rW2);
 [w3,d3]= svd(rW3);

@@ -21,7 +21,7 @@ for k = 1 : K
     elseif k == K
         H_k = H(1:K-1, :);
     else
-        index = [1:k-1,k+1:K];
+        index = [1:k-1,k+1:K]
         H_k = H(index,:);
     end
     

@@ -1,6 +1,6 @@
 % Give the channels H, noise variance \sigma^2, and regularization
 % parameter \alpha, calculate the rates. 
-function result = beamforming4_4(H, sigma2)
+function result = beamformingMax4_4(H, sigma2)
 K = size(H,1);
 N = size(H,2);
 
@@ -25,7 +25,7 @@ variable  W4(N,N) complex semidefinite
 
 
 
-minimize(trace(W1) + trace(W2) + trace(W3) + trace(W4))
+maximize(trace(W1) + trace(W2) + trace(W3) + trace(W4))
 
 subject to
 

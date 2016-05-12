@@ -1,4 +1,4 @@
-function [x, xi] = solveFeasible(H,sigma2,ATilde,Lambda,a,alpha)
+function [x, xi] = solveFeasibleMax(H,sigma2,ATilde,Lambda,a,alpha)
 K = size(Lambda,1);
 gain = real(trace(H'*H));
 t_max = (gain/K)/sigma2;
@@ -12,6 +12,7 @@ for k = 1 : K
     gamma(k) = (real(a(:,k,k))'* x)^2 / (x'*(ATilde(:,:,k) + sigma2 * Lambda) *x);  
     xi(k) = 1/x(k) - Lambda(k,k);
 end
+
 t_min = min(gamma);
 
 result = x;
@@ -22,7 +23,7 @@ t = (t_max + t_min)/2;
 cvx_begin quiet
 cvx_precision best
 variable x(K)
-minimize(sum(x))
+maximize(sum(x))
 for k = 1 : K
     norm(sqrt(t)*( ATilde(:,:,k) + sigma2 * Lambda)^(1/2) *x) <=  real(a(:,k,k))'* x
 end
@@ -43,4 +44,5 @@ for k = 1 : K
     xi(k) = 1/result(k) - Lambda(k,k) ;
 end
 x= x;
+end
 end

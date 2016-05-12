@@ -10,22 +10,25 @@ t0 = clock;
 %Parameter: # of MS, # of BS, # of receiving antenna, # of transmitting
 %antenna.
 N = 16; 
-K = 4;
+K = 16;
 Ptr = 1;
 beta = K/N;
 
-SINR_SET = [-10]
+SINR_SET = [-10:5:20]
 sumC = zeros(length(SINR_SET),1);
-sumR = zeros(length(SINR_SET),1);
+sumR1 = zeros(length(SINR_SET),1);
+sumR2 = zeros(length(SINR_SET),1);
 sumRMax = zeros(length(SINR_SET),1);
 sumRb = zeros(length(SINR_SET),1);
 sumR_alpha = zeros(length(SINR_SET),1);
-minR = zeros(length(SINR_SET),1);
+minR1 = zeros(length(SINR_SET),1);
+minR2 = zeros(length(SINR_SET),1);
 minRMax = zeros(length(SINR_SET),1);
 minRb = zeros(length(SINR_SET),1);
 minR_alpha = zeros(length(SINR_SET),1);
 sumAlpha = zeros(length(SINR_SET),1);
-sumXi = zeros(length(SINR_SET),1);
+sumXi1 = zeros(length(SINR_SET),1);
+sumXi2 = zeros(length(SINR_SET),1);
 
 for test = 1 :test_num
     test
@@ -36,12 +39,12 @@ alpha = beta/rho*N;
 
 
 %%%%%%%%%%%%%%%%%%%Generate h(:,k)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for k = 1: K
-%     l(k) = rand()
-%     generatePathLoss
-    l(k) = 1;
-end
-% l = generatePathLoss(K);
+% for k = 1: K
+% %     l(k) = rand()
+% %     generatePathLoss
+%     l(k) = 1;
+% end
+l = generatePathLoss(K);
 if DEBUG == 1
     l(1) = 1;
     l(2) = 0.1;
@@ -176,8 +179,8 @@ end
 %     selectb = 2;
 % end
 
-[x, xi] = solveFeasible(H,sigma2,ATilde,Lambda,a,alpha);
-[xMax, xiMax] = solveFeasibleMax(H,sigma2, ATilde, Lambda,a, alpha);
+[ xi ] = interative(b, alpha);
+
 
 
 % W =  H'*inv(H*H'+ alpha*eye(N));
@@ -189,18 +192,8 @@ end
 W =  H'*inv(H*H'+ U*diag(xi)*U');
 W = W/sqrt(real(trace(W'*W)));
 RG(1,:)= calculateRates(H,W,sigma2);
-xis(1,:) = xi;
 
-W =  H'*inv(H*H'+ U*diag(xiMax)*U');
-W = W/sqrt(real(trace(W'*W)));
-RG(2,:) = calculateRates(H,W,sigma2);
-xis(2,:) = xiMax;
 
-if min(RG(1,:)) >= min(RG(2,:))
-    select = 1;
-else
-    select = 2;
-end
 
 
 sumR_alpha(SINR_SET == SINR) = sumR_alpha(SINR_SET == SINR) + sum(R_alpha);
@@ -209,47 +202,44 @@ minR_alpha(SINR_SET == SINR) = minR_alpha(SINR_SET == SINR) + min(R_alpha);
 % minRMax(SINR_SET == SINR) = minRMax(SINR_SET == SINR) + min(RMax);
 % sumRMax(SINR_SET == SINR) = sumRMax(SINR_SET == SINR) + sum(RMax);
 
-sumR(SINR_SET == SINR) = sumR(SINR_SET == SINR) + sum(RG(select,:));
-minR(SINR_SET == SINR) = minR(SINR_SET == SINR) + min(RG(select,:));
+sumR1(SINR_SET == SINR) = sumR1(SINR_SET == SINR) + sum(RG(1,:));
+minR1(SINR_SET == SINR) = minR1(SINR_SET == SINR) + min(RG(1,:));
 
-% sumRb(SINR_SET == SINR) = sumRb(SINR_SET == SINR) + sum(Rb(select,:));
-% minRb(SINR_SET == SINR) = minRb(SINR_SET == SINR) + min(Rb(select,:));
-% sumC(SINR_SET == SINR) = sumC(SINR_SET == SINR) + sumCapacity(H, sigma2);
-
-sumAlpha(SINR_SET == SINR) = sumAlpha(SINR_SET == SINR) + K * alpha;
-sumXi(SINR_SET == SINR) = sumXi(SINR_SET == SINR) + sum(xis(select,:));
 end
 end
 
-sumR = sumR/test_num;
-minR = minR/test_num;
-
+sumR1 = sumR1/test_num;
+minR1 = minR1/test_num;
+sumR2 = sumR2/test_num;
+minR2 = minR2/test_num;
 sumR_alpha = sumR_alpha/test_num;
 minR_alpha = minR_alpha/test_num;
 
 % sumRb = sumRb/test_num;
 % minRb = minRb/test_num; 
-sumAlpha = sumAlpha/test_num;
-sumXi = sumXi/test_num;
+
 
 figure (3)
 hold on
 
 plot(SINR_SET, sumRb,'y');
-plot(SINR_SET, sumR,'b');
+plot(SINR_SET, sumR1,'-b^');
+plot(SINR_SET, sumR2,'bv');
 plot(SINR_SET, sumR_alpha, 'r');
 
 figure (2)
 hold on
 plot(SINR_SET, minRb,'y');
-plot(SINR_SET, minR,'b');
+plot(SINR_SET, minR1,'-b^');
+plot(SINR_SET, minR2,'bv');
 plot(SINR_SET, minR_alpha, 'r');
 
 
 figure (1)
 hold on
 plot(SINR_SET, sumAlpha,'y');
-plot(SINR_SET, sumXi,'b');
+plot(SINR_SET, sumXi1,'b^');
+plot(SINR_SET, sumXi2,'bv');
 
 
 save GRCI16_16_1000
